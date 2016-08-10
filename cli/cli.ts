@@ -1303,17 +1303,9 @@ export function serveAsync(arg?: string) {
         saveConfig()
     }
     let localToken = globalConfig.localToken;
+    process.chdir(nodeutil.targetDir)
     if (!fs.existsSync("pxtarget.json")) {
-        let upper = path.join(__dirname, "../../..")
-        if (fs.existsSync(path.join(upper, "pxtarget.json"))) {
-            console.log("going to " + upper)
-            process.chdir(upper)
-        } else {
-            U.userError("Cannot find pxtarget.json to serve.")
-        }
-    }
-    if (!fs.existsSync("node_modules/typescript")) {
-        U.userError("Oops, typescript does not seem to be installed, did you run 'npm install'?");
+        U.userError("Cannot find pxtarget.json to serve under " + nodeutil.targetDir)
     }
     return (justServe ? Promise.resolve() : buildAndWatchTargetAsync())
         .then(() => server.serveAsync({
@@ -2828,7 +2820,7 @@ function errorHandler(reason: any) {
     process.exit(20)
 }
 
-export function mainCli(targetDir: string) {
+export function mainCli(targetDir: string, args?: string[]) {
     process.on("unhandledRejection", errorHandler);
     process.on('uncaughtException', errorHandler);
 
@@ -2837,6 +2829,7 @@ export function mainCli(targetDir: string) {
         console.error("   npm update -g pxt")
         process.exit(30)
     }
+    console.log('target dir: ', targetDir)
 
     nodeutil.targetDir = targetDir;
 
@@ -2847,7 +2840,7 @@ export function mainCli(targetDir: string) {
 
     commonfiles = readJson(__dirname + "/pxt-common.json")
 
-    let args = process.argv.slice(2)
+    if (!args) args = process.argv.slice(2)
 
     initConfig();
 
